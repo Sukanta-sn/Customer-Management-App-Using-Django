@@ -9,8 +9,9 @@
 		<div class="card card-body">
 			<h5>Customer:</h5>
 			<hr>
-			<a class="btn btn-outline-info  btn-sm btn-block" href="">Update Customer</a>
-			<a class="btn btn-outline-danger  btn-sm btn-block" href="">Delete Customer</a>
+			<a href="{% url 'update_order' order.id %}" class="btn btn-sm btn-info">Update</a>
+
+			<a href="{% url 'delete_order' order.id %}" class="btn btn-sm btn-danger">Delete</a>
 
 		</div>
 	</div>
