@@ -77,7 +77,7 @@ def updateOrder(request, pk):
 			form.save()
 		return redirect('/')
 
-	context = {'updateform' : form}
+	context = {'orderform' : form}
 	return render(request, 'accounts/order_form.html', context)
 
 def deleteOrder(request, pk):
