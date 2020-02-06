@@ -6,7 +6,12 @@
 <form action="" method="POST">
 
     {% csrf_token %}
-    {{ orderform }}
+    {{ formset.management_form }}
+     
+     {% for form in  formset %}
+     	{{ form }}
+     	<hr>
+     {% endfor %}
 
     <button type="submit">Submit</button>
 </form>

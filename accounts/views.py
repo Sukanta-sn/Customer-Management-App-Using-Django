@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
+from django.forms import inlineformset_factory # used for creating multiple forms within one form
 from .models import *
 from .forms import OrderForm
 
@@ -53,17 +54,21 @@ def customers(request, cust_id):
 
 	return render(request, 'accounts/customers.html', context)
 
-def createOrder(request):
+def createOrder(request, pk):
+	# gets the customer with the given primary key
+	customer = Customer.objects.get(id=pk)
+	OrderFormSet = inlineformset_factory(Customer, Order, fields=('product', 'status'), extra=10)
+	formset = OrderFormSet(queryset = Order.objects.none(), instance=customer)
 
-	form = OrderForm()
 	if request.method == 'POST':
-		form = OrderForm(request.POST)
-		if form.is_valid():
-			form.save()
+		formset = OrderForm(request.POST, instance=customer)
+		print(formset)
+		if formset.is_valid():
+			formset.save()
 		return redirect('/')	
 
 
-	context = {'orderform' : form}
+	context = {'formset' : formset}
 	return render(request, 'accounts/order_form.html', context)
 
 
