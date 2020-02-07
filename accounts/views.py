@@ -61,14 +61,15 @@ def createOrder(request, pk):
 	formset = OrderFormSet(queryset = Order.objects.none(), instance=customer)
 
 	if request.method == 'POST':
-		formset = OrderForm(request.POST, instance=customer)
+		formset = OrderFormSet(request.POST, instance=customer)
 		print(formset)
 		if formset.is_valid():
 			formset.save()
 		return redirect('/')	
 
 
-	context = {'formset' : formset}
+	context = {'orderformset' : formset}
+	print(formset)
 	return render(request, 'accounts/order_form.html', context)
 
 
@@ -82,7 +83,8 @@ def updateOrder(request, pk):
 			form.save()
 		return redirect('/')
 
-	context = {'orderform' : form}
+	context = {'orderformset' : form}
+	print(form)
 	return render(request, 'accounts/order_form.html', context)
 
 def deleteOrder(request, pk):

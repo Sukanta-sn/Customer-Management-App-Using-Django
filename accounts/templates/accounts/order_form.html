@@ -8,7 +8,7 @@
     {% csrf_token %}
     {{ formset.management_form }}
      
-     {% for form in  formset %}
+     {% for form in  orderformset %}
      	{{ form }}
      	<hr>
      {% endfor %}
