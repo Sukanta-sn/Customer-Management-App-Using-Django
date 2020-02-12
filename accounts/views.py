@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from django.forms import inlineformset_factory # used for creating multiple forms within one form
 from .models import *
 from .forms import OrderForm
+from .filters import *
 
 # Create your views here.
 
@@ -45,11 +46,13 @@ def customers(request, cust_id):
 	orders = customer.order_set.all()
 	order_count = orders.count()
 
-	print(order_count)	
+	orderFilterForm = OrderFilter(request.GET, queryset=orders)
+	orders = orderFilterForm.qs	
 
 	context = { 'cust' : customer,
 				'cust_orders' : orders,
-				'totalOrders' : order_count, 
+				'totalOrders' : order_count,
+				'orderFilterForm' : orderFilterForm, 
 	 }
 
 	return render(request, 'accounts/customers.html', context)
@@ -69,7 +72,7 @@ def createOrder(request, pk):
 
 
 	context = {'orderformset' : formset}
-	print(formset)
+	
 	return render(request, 'accounts/order_form.html', context)
 
 
@@ -83,8 +86,8 @@ def updateOrder(request, pk):
 			form.save()
 		return redirect('/')
 
-	context = {'orderformset' : form}
-	print(form)
+	context = {'form' : form}
+	
 	return render(request, 'accounts/order_form.html', context)
 
 def deleteOrder(request, pk):
