@@ -16,6 +16,7 @@ from django.contrib.auth import authenticate, login, logout
 # This import is used to restrict user access
 from django.contrib.auth.decorators import login_required
 
+
 # Create your views here.
 
 
@@ -149,7 +150,7 @@ def createOrder(request, pk):
 
 
 	context = {'orderformset' : formset}
-	print(formset)
+	
 	return render(request, 'accounts/order_form.html', context)
 
 
@@ -166,7 +167,9 @@ def updateOrder(request, pk):
 			form.save()
 		return redirect('/')
 
-	context = {'form' : form}
+
+	context = {'orderformset' : form}
+	
 	return render(request, 'accounts/order_form.html', context)
 
 
