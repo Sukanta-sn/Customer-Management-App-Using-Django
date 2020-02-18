@@ -6,12 +6,25 @@
 <form action="" method="POST">
 
     {% csrf_token %}
-    {{ formset.management_form }}
+
+    {% if orderformset %}
+    	
+    	{{ orderformset.management_form }}
+
+    	{% for form in  orderformset %}
+     		{{ form }}
+     		<hr>
+     	{% endfor %}
+
+    {% elif form %}
+
+    	{{ form }}
+
+    {% endif %}
+
+    
      
-     {% for form in  orderformset %}
-     	{{ form }}
-     	<hr>
-     {% endfor %}
+     
 
     <button type="submit">Submit</button>
 </form>
