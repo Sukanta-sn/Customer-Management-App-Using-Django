@@ -1,11 +1,16 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from django.forms import inlineformset_factory # used for creating multiple forms within one form
 from .models import *
 from .forms import OrderForm, SignupForm
 from .filters import *
 
 from django.contrib.auth.forms import UserCreationForm
+
+# importing predifined group model
+from django.contrib.auth.models import Group
+
+# used for creating multiple forms within one form
+from django.forms import inlineformset_factory 
 
 # This line is used for importing flash messages
 from django.contrib import messages
@@ -16,13 +21,16 @@ from django.contrib.auth import authenticate, login, logout
 # This import is used to restrict user access
 from django.contrib.auth.decorators import login_required
 
+# importing decorators 
+from .decorators import *
 
 # Create your views here.
 
 
-# This line restricts the view for unauthenticated users
+# This decorator restricts the view for unauthenticated users
 @login_required(login_url='login')
-
+# this decorator restricts the dashboard based on user's role
+@check_admin
 def home(request):
 
 	orders = Order.objects.all()
@@ -47,57 +55,63 @@ def home(request):
 
 	return render(request, 'accounts/dashboard.html', context)
 
+
+@check_authentication
 def loginPage(request):
 
-	# if the user is logged in then login/signup page is restricted
-	if request.user.is_authenticated:
-		return redirect('home')
-	
-	else:
+	if request.method == 'POST':
+		user_name = request.POST.get('username')
+		pass_word = request.POST.get('password')
 
-		if request.method == 'POST':
-			user_name = request.POST.get('username')
-			pass_word = request.POST.get('password')
+		user = authenticate(request, username=user_name, password=pass_word)
 
-			user = authenticate(request, username=user_name, password=pass_word)
+		if user is not None:
+			login(request, user)
+			return redirect('home')
+		else:
+			messages.info(request, 'Username Or Password is incorrect')
 
-			if user is not None:
-				login(request, user)
-				return redirect('home')
-			else:
-				messages.info(request, 'Username Or Password is incorrect')
+	return render(request, 'accounts/login.html')
 
-		return render(request, 'accounts/login.html')
-
+@check_authentication
 def signupPage(request):
 	
-	# if the user is logged in then login/signup page is restricted
-	if request.user.is_authenticated:
-		return redirect('home')
+	form = SignupForm()
 
-	else : 
+	if request.method == "POST":
+		form = SignupForm(request.POST)
+		if form.is_valid():
+			
+			user = form.save()
 
-		form = SignupForm()
+			# get the group name
+			group = Group.objects.get(name='customer')
 
-		if request.method == "POST":
-			form = SignupForm(request.POST)
-			if form.is_valid():
-				form.save()
-				messages.success(request, 'Account Created Successfully')
-				return redirect('login')
+			# add the user to the group
+			user.groups.add(group)
 
-		context = {
-			'signupform' : form,
-		}
+			messages.success(request, 'Account Created Successfully')
+			return redirect('login')
 
-		return render(request, 'accounts/signup.html', context)
+	context = {
+		'signupform' : form,
+	}
+
+	return render(request, 'accounts/signup.html', context)
 
 def logoutUser(request):
 	logout(request)
 	return redirect('login')
 
+
+def userPage(request):
+	context = {}
+	return render(request, 'accounts/user.html', context)
+
 # This line restricts the view for unauthenticated users
 @login_required(login_url='login')
+# this decorator restricts the view based on user's role
+@allowed_users(allowed_roles=['admin'])
 def products(request):
 
 	products = Product.objects.all()
@@ -109,7 +123,8 @@ def products(request):
 
 # This line restricts the view for unauthenticated users
 @login_required(login_url='login')
-
+# this decorator restricts the view based on user's role
+@allowed_users(allowed_roles=['admin'])
 def customers(request, cust_id):
 
 	customer = Customer.objects.get(id = cust_id)
@@ -131,7 +146,8 @@ def customers(request, cust_id):
 
 # This line restricts the view for unauthenticated users
 @login_required(login_url='login')
-
+# this decorator restricts the view based on user's role
+@allowed_users(allowed_roles=['admin'])
 def createOrder(request, pk):
 	# gets the customer with the given primary key
 	customer = Customer.objects.get(id=pk)
@@ -156,7 +172,8 @@ def createOrder(request, pk):
 
 # This line restricts the view for unauthenticated users
 @login_required(login_url='login')
-
+# this decorator restricts the view based on user's role
+@allowed_users(allowed_roles=['admin'])
 def updateOrder(request, pk):
 	order =  Order.objects.get(id=pk)
 	form = OrderForm(instance=order)
@@ -175,7 +192,8 @@ def updateOrder(request, pk):
 
 # This line restricts the view for unauthenticated users
 @login_required(login_url='login')
-
+# this decorator restricts the view based on user's role
+@allowed_users(allowed_roles=['admin'])
 def deleteOrder(request, pk):
 	order =  Order.objects.get(id=pk)
 
@@ -185,4 +203,6 @@ def deleteOrder(request, pk):
 
 	context = {'item' : order}
 	return render(request, 'accounts/delete.html', context)
+
+
 
