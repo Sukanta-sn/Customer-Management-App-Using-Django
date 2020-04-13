@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from .models import *
-from .forms import OrderForm, SignupForm
+from .forms import OrderForm, SignupForm, CustomerForm
 from .filters import *
 
 from django.contrib.auth.forms import UserCreationForm
@@ -81,15 +81,7 @@ def signupPage(request):
 	if request.method == "POST":
 		form = SignupForm(request.POST)
 		if form.is_valid():
-			
-			user = form.save()
-
-			# get the group name
-			group = Group.objects.get(name='customer')
-
-			# add the user to the group
-			user.groups.add(group)
-
+			form.save()
 			messages.success(request, 'Account Created Successfully')
 			return redirect('login')
 
@@ -104,8 +96,27 @@ def logoutUser(request):
 	return redirect('login')
 
 
+
+# This line restricts the view for unauthenticated users
+@login_required(login_url='login')
+# this decorator restricts the view based on user's role
+@allowed_users(allowed_roles=['customer'])
 def userPage(request):
-	context = {}
+	orders = request.user.customer.order_set.all()
+
+	total_orders = orders.count()
+	delivered = orders.filter(status='Delivered').count()
+	pending = orders.filter(status='Pending').count()
+
+
+	print(orders)
+
+	context = {'order_list' : orders,
+			   'order_count' : total_orders,
+			   'delivered_count' : delivered,
+			   'pending_count' : pending,
+
+	}
 	return render(request, 'accounts/user.html', context)
 
 # This line restricts the view for unauthenticated users
@@ -206,3 +217,22 @@ def deleteOrder(request, pk):
 
 
 
+@login_required(login_url='login')
+@allowed_users(allowed_roles=['customer'])
+def accountSettings(request):
+
+	customer = request.user.customer
+	print(customer.profile_pic)
+	form = CustomerForm(instance=customer)
+	
+
+	if request.method == 'POST':
+		form = CustomerForm(request.POST, request.FILES, instance=customer)		
+		if form.is_valid():
+			form.save()
+
+	else :
+		form = CustomerForm(instance=customer)
+
+	context = {'cust_form' : form}
+	return render(request, 'accounts/account_settings.html', context)
